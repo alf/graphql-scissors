@@ -13,10 +13,8 @@
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <graphql-java.version>22.3</graphql-java.version>
+        <graphql-java.version>25.0</graphql-java.version>
         <federation-graphql-java-support.version>4.1.0</federation-graphql-java-support.version>
-        <jakarta.cdi-api.version>4.0.1</jakarta.cdi-api.version>
-        <jakarta.inject-api.version>2.0.1</jakarta.inject-api.version>
         <junit.version>5.11.4</junit.version>
     </properties>
 
@@ -33,22 +31,6 @@
             <groupId>com.apollographql.federation</groupId>
             <artifactId>federation-graphql-java-support</artifactId>
             <version>${federation-graphql-java-support.version}</version>
-        </dependency>
-
-        <!-- Jakarta CDI (@ApplicationScoped) — provided by the runtime -->
-        <dependency>
-            <groupId>jakarta.enterprise</groupId>
-            <artifactId>jakarta.enterprise.cdi-api</artifactId>
-            <version>${jakarta.cdi-api.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- Jakarta Inject (@Inject) — provided by the runtime -->
-        <dependency>
-            <groupId>jakarta.inject</groupId>
-            <artifactId>jakarta.inject-api</artifactId>
-            <version>${jakarta.inject-api.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- JUnit 5 -->

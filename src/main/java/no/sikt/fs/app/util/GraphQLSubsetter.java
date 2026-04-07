@@ -15,12 +15,9 @@ import graphql.schema.GraphQLFieldsContainer;
 import graphql.schema.GraphQLScalarType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.*;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 import java.util.*;
 
-@ApplicationScoped
 public class GraphQLSubsetter {
     private static final String FEDERATION_FIELDSET = "federation__FieldSet";
     private final TypeDefinitionRegistry typeDefinitionRegistry;
@@ -46,7 +43,6 @@ public class GraphQLSubsetter {
 
         }).build();
 
-    @Inject
     public GraphQLSubsetter(TypeDefinitionRegistry typeDefinitionRegistry) {
         this.typeDefinitionRegistry = typeDefinitionRegistry;
     }
