@@ -7,8 +7,15 @@ import graphql.analysis.QueryVisitorFieldEnvironment;
 import graphql.analysis.QueryVisitorStub;
 import graphql.language.Document;
 import graphql.language.FieldDefinition;
+import graphql.language.InputObjectTypeDefinition;
+import graphql.language.InterfaceTypeDefinition;
+import graphql.language.ListType;
+import graphql.language.NonNullType;
 import graphql.language.ObjectTypeDefinition;
+import graphql.language.Type;
 import graphql.language.TypeDefinition;
+import graphql.language.TypeName;
+import graphql.language.UnionTypeDefinition;
 import graphql.parser.Parser;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLFieldsContainer;
@@ -20,6 +27,7 @@ import java.util.*;
 
 public class GraphQLSubsetter {
     private static final String FEDERATION_FIELDSET = "federation__FieldSet";
+    private static final Set<String> BUILT_IN_SCALARS = Set.of("String", "Int", "Float", "Boolean", "ID");
     private final TypeDefinitionRegistry typeDefinitionRegistry;
     private final Map<String, GraphQLScalarType> federationScalars = Map.of(
         FEDERATION_FIELDSET, _FieldSet.type.transform(it -> it.name(FEDERATION_FIELDSET)),
@@ -118,6 +126,66 @@ public class GraphQLSubsetter {
             }
         }
 
+        // Bug 4: GraphQL spec requires a query type; if only mutations/subscriptions
+        // were queried, Query won't be in fieldsByParent — add the full original type.
+        if (pruned.getType("Query").isEmpty()) {
+            typeDefinitionRegistry.getType("Query").ifPresent(pruned::add);
+        }
+
+        // Bugs 1, 2, 3: fixed-point closure — keep adding types referenced by the
+        // pruned registry (scalars, input types, unions, interfaces, enums) until stable.
+        boolean added = true;
+        while (added) {
+            added = false;
+            List<?> snapshot = new ArrayList<>(pruned.types().values());
+            for (var rawDef : snapshot) {
+                TypeDefinition<?> def = (TypeDefinition<?>) rawDef;
+                for (String name : referencedTypeNames(def)) {
+                    if (BUILT_IN_SCALARS.contains(name) || pruned.getType(name).isPresent()) {
+                        continue;
+                    }
+                    var original = typeDefinitionRegistry.getType(name);
+                    if (original.isPresent()) {
+                        pruned.add(original.get());
+                        added = true;
+                    }
+                }
+            }
+        }
+
         return pruned;
+    }
+
+    private Set<String> referencedTypeNames(TypeDefinition<?> def) {
+        Set<String> names = new HashSet<>();
+        if (def instanceof ObjectTypeDefinition obj) {
+            obj.getImplements().forEach(t -> names.add(unwrapTypeName(t)));
+            for (var field : obj.getFieldDefinitions()) {
+                names.add(unwrapTypeName(field.getType()));
+                field.getInputValueDefinitions().forEach(iv -> names.add(unwrapTypeName(iv.getType())));
+            }
+        } else if (def instanceof InterfaceTypeDefinition iface) {
+            iface.getImplements().forEach(t -> names.add(unwrapTypeName(t)));
+            for (var field : iface.getFieldDefinitions()) {
+                names.add(unwrapTypeName(field.getType()));
+                field.getInputValueDefinitions().forEach(iv -> names.add(unwrapTypeName(iv.getType())));
+            }
+        } else if (def instanceof InputObjectTypeDefinition input) {
+            input.getInputValueDefinitions().forEach(iv -> names.add(unwrapTypeName(iv.getType())));
+        } else if (def instanceof UnionTypeDefinition union) {
+            union.getMemberTypes().forEach(t -> names.add(unwrapTypeName(t)));
+        }
+        return names;
+    }
+
+    private String unwrapTypeName(Type<?> type) {
+        if (type instanceof TypeName tn) {
+            return tn.getName();
+        } else if (type instanceof NonNullType nnt) {
+            return unwrapTypeName(nnt.getType());
+        } else if (type instanceof ListType lt) {
+            return unwrapTypeName(lt.getType());
+        }
+        throw new IllegalArgumentException("Unknown Type node: " + type.getClass());
     }
 }
