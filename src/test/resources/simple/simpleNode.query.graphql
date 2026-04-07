@@ -1,0 +1,9 @@
+{
+    node {
+        id
+
+        ... on Fugl {
+            id
+        }
+    }
+}

@@ -1,0 +1,10 @@
+{
+    node(id: "") {
+        id
+
+        ... on Fugl {
+            id
+            extended
+        }
+    }
+}

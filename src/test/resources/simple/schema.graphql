@@ -1,0 +1,33 @@
+scalar BigDecimal
+
+type Query {
+    node(id: ID): Node
+    fisk: Fisk
+    frosk(query: FroskQuery): Frosk
+}
+
+interface Node {
+    id: ID
+}
+
+type Fugl implements Node {
+    id: ID
+    navn: String
+}
+
+type Fisk {
+    navn: String
+}
+
+type Frosk {
+    number: BigDecimal
+}
+
+input FroskQuery {
+    number: BigDecimal
+}
+
+extend type Fugl {
+    extended: String
+}
+
