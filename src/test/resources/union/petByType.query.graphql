@@ -1,0 +1,6 @@
+{
+    pet {
+        ... on Dog { bark }
+        ... on Cat { meow }
+    }
+}

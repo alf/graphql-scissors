@@ -1,0 +1,13 @@
+union Pet = Dog | Cat
+
+type Dog {
+    bark: String
+}
+
+type Cat {
+    meow: String
+}
+
+type Query {
+    pet: Pet
+}

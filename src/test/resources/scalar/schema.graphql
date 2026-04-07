@@ -1,0 +1,13 @@
+scalar DateTime
+scalar UUID
+
+type Event {
+    id: UUID
+    name: String
+    createdAt: DateTime
+}
+
+type Query {
+    event: Event
+    name: String
+}

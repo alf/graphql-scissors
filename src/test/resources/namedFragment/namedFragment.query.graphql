@@ -1,0 +1,10 @@
+fragment ArticlePreview on Article {
+    title
+}
+
+{
+    article {
+        id
+        ...ArticlePreview
+    }
+}

@@ -1,0 +1,14 @@
+input DateRange {
+    from: String
+    to: String
+}
+
+type Report {
+    title: String
+    total: Int
+}
+
+type Query {
+    report(range: DateRange): Report
+    ping: String
+}

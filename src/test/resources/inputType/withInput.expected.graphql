@@ -1,0 +1,12 @@
+input DateRange {
+    from: String
+    to: String
+}
+
+type Report {
+    title: String
+}
+
+type Query {
+    report(range: DateRange): Report
+}
