@@ -6,6 +6,8 @@ import graphql.schema.*;
 import graphql.schema.idl.*;
 
 import java.util.*;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Generates a Graphviz DOT file that visualises a GraphQL schema.
@@ -49,6 +51,35 @@ public class GraphQLSchemaDotGenerator {
                 }
             }).build();
         this.schema = new SchemaGenerator().makeExecutableSchema(typeDefinitionRegistry, wiring);
+    }
+
+    /**
+     * Renders the schema as an SVG string by piping the DOT source through the
+     * {@code dot} command-line tool from Graphviz.
+     *
+     * @throws IOException          if the {@code dot} process cannot be started
+     * @throws InterruptedException if the calling thread is interrupted while waiting
+     * @throws IllegalStateException if {@code dot} exits with a non-zero status
+     */
+    public String generateSvg() throws IOException, InterruptedException {
+        String dot = generateDot();
+
+        var process = new ProcessBuilder("dot", "-Tsvg")
+            .redirectErrorStream(false)
+            .start();
+
+        try (var stdin = process.getOutputStream()) {
+            stdin.write(dot.getBytes(StandardCharsets.UTF_8));
+        }
+
+        String svg    = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+        int exit      = process.waitFor();
+
+        if (exit != 0) {
+            throw new IllegalStateException("dot exited with code " + exit + ": " + stderr.strip());
+        }
+        return svg;
     }
 
     public String generateDot() {

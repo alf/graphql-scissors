@@ -122,6 +122,20 @@ class GraphQLSchemaDotGeneratorTest {
         assertFalse(dot.contains("\"Frosk\":\"number\" ->"), "no edge for scalar field");
     }
 
+    // ── SVG generation ────────────────────────────────────────────────────────
+
+    @Test
+    void generateSvgProducesWellFormedSvg() throws IOException, InterruptedException {
+        var schemaPath = Paths.get("src", "test", "resources", "simple", "schema.graphql");
+        TypeDefinitionRegistry registry = new SchemaParser().parse(Files.readString(schemaPath));
+        var svg = new GraphQLSchemaDotGenerator(registry).generateSvg();
+
+        assertTrue(svg.contains("<svg"),           "output should be SVG");
+        assertTrue(svg.contains("</svg>"),         "output should be closed SVG");
+        assertTrue(svg.contains("Query"),          "SVG should contain type name Query");
+        assertTrue(svg.contains("Fugl"),           "SVG should contain type name Fugl");
+    }
+
     // ── Graph structure ───────────────────────────────────────────────────────
 
     @Test
