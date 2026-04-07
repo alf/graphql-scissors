@@ -5,6 +5,7 @@ import com.apollographql.federation.graphqljava.link__Import;
 import graphql.analysis.QueryTraverser;
 import graphql.analysis.QueryVisitorFieldEnvironment;
 import graphql.analysis.QueryVisitorStub;
+import graphql.language.Description;
 import graphql.language.Document;
 import graphql.language.FieldDefinition;
 import graphql.language.InputObjectTypeDefinition;
@@ -127,9 +128,19 @@ public class GraphQLSubsetter {
         }
 
         // Bug 4: GraphQL spec requires a query type; if only mutations/subscriptions
-        // were queried, Query won't be in fieldsByParent — add the full original type.
+        // were queried, Query won't be in fieldsByParent — add a minimal stub.
         if (pruned.getType("Query").isEmpty()) {
-            typeDefinitionRegistry.getType("Query").ifPresent(pruned::add);
+            var placeholder = FieldDefinition.newFieldDefinition()
+                .name("empty")
+                .type(TypeName.newTypeName("String").build())
+                .description(new Description(
+                    "Placeholder field: the GraphQL specification requires a Query type.",
+                    null, false))
+                .build();
+            pruned.add(ObjectTypeDefinition.newObjectTypeDefinition()
+                .name("Query")
+                .fieldDefinition(placeholder)
+                .build());
         }
 
         // Bugs 1, 2, 3: fixed-point closure — keep adding types referenced by the

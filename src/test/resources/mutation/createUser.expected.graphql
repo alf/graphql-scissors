@@ -1,9 +1,10 @@
-type Query {
-    ping: String
-}
-
 type Mutation {
     createUser(name: String): User
+}
+
+type Query {
+    "Placeholder field: the GraphQL specification requires a Query type."
+    empty: String
 }
 
 type User {
